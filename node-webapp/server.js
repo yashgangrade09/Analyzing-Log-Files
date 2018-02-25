@@ -2,54 +2,27 @@
 var http = require('http');
 var formidable = require('formidable');
 var fs = require('fs');
-// google.charts.load('current', {'packages':['corechart']});
-// google.charts.setOnLoadCallback(drawChart);
-
-function tableCreate() {
-    var body = document.getElementsByTagName('body')[0];
-    var tbl = document.createElement('table');
-    tbl.style.width = '100%';
-    tbl.setAttribute('border', '1');
-    var tbdy = document.createElement('tbody');
-    for (var i = 0; i < 3; i++) {
-        var tr = document.createElement('tr');
-        for (var j = 0; j < 2; j++) {
-            if (i == 2 && j == 1) {
-                break
-            } else {
-                var td = document.createElement('td');
-                td.appendChild(document.createTextNode('\u0020'))
-                i == 1 && j == 1 ? td.setAttribute('rowSpan', '2') : null;
-                tr.appendChild(td)
-            }
-        }
-        tbdy.appendChild(tr);
-    }
-    tbl.appendChild(tbdy);
-    body.appendChild(tbl)
-}
+var resolve = require('path').resolve
 
 function sortProperties(obj)
 {
-  // convert object into array
   var sortable=[];
   for(var key in obj)
     if(obj.hasOwnProperty(key))
-      sortable.push([key, obj[key]]); // each item is an array in format [key, value]
-  
-  // sort items by value
+      sortable.push([key, obj[key]]);
+
   sortable.sort(function(a, b)
   {
     var x=a[1]
       y=b[1]
     return x<y ? 1 : x>y ? -1 : 0;
   });
-  return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
+  return sortable; 
 }
 
 function parseFiles(filepath, res){
   var user_record = {};
-
+  var myTable = "<table><tr><td style='width: 100px; color: black; text-align: left;'>User Name</td>";
   var lineReader = require('readline').createInterface({
     input: fs.createReadStream(filepath)
   });
@@ -67,45 +40,43 @@ function parseFiles(filepath, res){
   })
   .on('close', function(){
     record_arr = sortProperties(user_record)
-    res.write('User Name  Number of Page Views \n');
-    for (var i=0; i < record_arr.length; i++){
-      // console.log(user_record.toString());
-      res.write(record_arr[i][0] + ' ' + record_arr[i][1] + '\n');
-    }
-    res.end();
+    log = fs.readFile('logstats.html', "utf8", function(error, data){
+      if (error){
+        res.writeHead(404);
+        res.write('Page not found');
+      }
+      else {
+        display_data = '';
+        chart_data = '';
+        for (var i=0; i < record_arr.length; i++){
+          var name = record_arr[i][0];
+          var views = record_arr[i][1];
+          display_data += "<td>" + name + "</td>";
+          display_data += "<td>" + views + "</td></tr>";
+          chart_data += '{y: ' + views + ', label: "' + name + '"}, '; 
+        }
+        res.write(data.replace('display_data', display_data).replace('chart_data', chart_data));
+        res.end();
+      }
+    })
   });
-
-  /*function drawChart() {
-        var data = google.visualization.arrayToDataTable(user_record);
-
-        var options = {
-          title: 'My Daily Activities'
-        };
-
-        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-
-        chart.draw(data, options);
-      }*/
 }
 
 http.createServer(function (req, res) {
-  if (req.url == '/fileupload') {
+  if (req.url == '/logstats.html') {
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
       var oldpath = files.filetoupload.path;
-      var newpath = 'files/' + files.filetoupload.name;
+      var newpath = '../files/' + files.filetoupload.name;
       fs.rename(oldpath, newpath, function (err) {
         if (err) throw err;
         parseFiles(newpath, res);
       });
-
- });
+    });
   } else {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<form action="fileupload" method="post" enctype="multipart/form-data">');
-    res.write('<input type="file" name="filetoupload"><br>');
-    res.write('<input type="submit">');
-    res.write('</form>');
-    return res.end();
+    landing = fs.readFileSync('index.html')
+    res.write(landing)
+    res.end();
   }
 }).listen(8080);
