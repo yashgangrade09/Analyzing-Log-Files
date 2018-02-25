@@ -1,9 +1,10 @@
-// var myincludes = require('./plotly-latest.min.js');
+// This file should be used if you want to test on the localhost server
 var http = require('http');
 var formidable = require('formidable');
 var fs = require('fs');
 var resolve = require('path').resolve
 
+// function to sort the table in decreasing order
 function sortProperties(obj)
 {
   var sortable=[];
@@ -20,6 +21,7 @@ function sortProperties(obj)
   return sortable; 
 }
 
+// function to parse the files and make a stylized table containing all the entries from the data
 function parseFiles(filepath, res){
   var user_record = {};
   var myTable = "<table><tr><td style='width: 100px; color: black; text-align: left;'>User Name</td>";
@@ -62,6 +64,7 @@ function parseFiles(filepath, res){
   });
 }
 
+// Setting up the environment to run on the localhost
 http.createServer(function (req, res) {
   if (req.url == '/logstats.html') {
     var form = new formidable.IncomingForm();
