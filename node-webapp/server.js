@@ -62,12 +62,13 @@ function parseFiles(filepath, res){
   });
 }
 
+var port = process.env.PORT || 3000;
 http.createServer(function (req, res) {
   if (req.url == '/logstats.html') {
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
       var oldpath = files.filetoupload.path;
-      var newpath = '../files/' + files.filetoupload.name;
+      var newpath = files.filetoupload.path + files.filetoupload.name;
       fs.rename(oldpath, newpath, function (err) {
         if (err) throw err;
         parseFiles(newpath, res);
@@ -79,4 +80,4 @@ http.createServer(function (req, res) {
     res.write(landing)
     res.end();
   }
-}).listen(8080);
+}).listen(port);
