@@ -5,3 +5,5 @@ server.js file is modified so as to make it compatible with AWS.
 
 index.html contains the first page where the user is asked to upload and submit a file. 
 Logstats.html is the second page which shows the statistics in a tabular format, a pie chart depicting the same statistics, and a link to the source code (redirects to github repository).
+
+There is a file called 'LogStats.java', it is not being used anywhere in the hosting and process. It's a standalone file to show statistics by running the single program in java. 
